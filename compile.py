@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 
 BASE_DIR = os.path.dirname(sys.argv[0])
-CLOSURE_URL = 'http://closure-compiler.appspot.com/compile'
+CLOSURE_URL = 'https://closure-compiler.appspot.com/compile'
 TARGET_JS = os.path.join(BASE_DIR, 'sample', 'chrome-nfc.js')
 
 def print_errors(errors, js_files):
@@ -46,7 +46,7 @@ def main():
   params = [
       ('compilation_level', 'WHITESPACE_ONLY'),
       ('formatting', 'pretty_print'),
-      ('language', 'ECMASCRIPT5'),
+      ('language_out', 'ECMASCRIPT_2018'),
       ('output_format', 'json'),
       ('output_info', 'statistics'),
       ('output_info', 'warnings'),

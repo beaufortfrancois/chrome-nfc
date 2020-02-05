@@ -1,3 +1,4 @@
+'use strict';
 function B64_encode(bytes, opt_length) {
   if (!opt_length) {
     opt_length = bytes.length;
@@ -60,7 +61,7 @@ function B64_decode(string) {
   var bytes = [];
   var accu = 0;
   var shift = 0;
-  for (var i = 0;i < string.length;++i) {
+  for (var i = 0; i < string.length; ++i) {
     var c = string.charCodeAt(i);
     if (c < 32 || c > 127 || !B64_inmap[c - 32]) {
       return [];
@@ -95,9 +96,9 @@ MifareClassic.prototype.log2phy = function(logic_blknum) {
 };
 MifareClassic.prototype.mif_calc_crc8 = function(input) {
   var crc = 199;
-  for (var i = 0;i < input.length;i++) {
+  for (var i = 0; i < input.length; i++) {
     crc = crc ^ input[i];
-    for (var j = 0;j < 8;j++) {
+    for (var j = 0; j < 8; j++) {
       if (crc & 128) {
         crc = crc << 1 ^ 29;
       } else {
@@ -109,9 +110,9 @@ MifareClassic.prototype.mif_calc_crc8 = function(input) {
 };
 MifareClassic.prototype.mif_calc_crc16 = function(input) {
   var crc = 51084;
-  for (var i = 0;i < input.length;i++) {
+  for (var i = 0; i < input.length; i++) {
     crc = crc ^ input[i] << 8;
-    for (var j = 0;j < 8;j++) {
+    for (var j = 0; j < 8; j++) {
       if (crc & 32768) {
         crc = crc << 1 ^ 4129;
       } else {
@@ -122,10 +123,10 @@ MifareClassic.prototype.mif_calc_crc16 = function(input) {
   return crc;
 };
 MifareClassic.prototype.copy_auth_keys = function(data, dev) {
-  for (var i = 0;i < 6;i++) {
+  for (var i = 0; i < 6; i++) {
     data[i] = dev.auth_key[i];
   }
-  for (var i = 0;i < 6;i++) {
+  for (var i = 0; i < 6; i++) {
     data[i + 10] = 255;
   }
   return data;
@@ -142,7 +143,7 @@ MifareClassic.prototype.read_physical = function(device, phy_block, cnt, cb) {
   function fast_read(phy_block, data, max_block) {
     if (phy_block == 3 && data[57] != 105) {
       var nfc_cnt;
-      for (nfc_cnt = 0;data[18 + nfc_cnt * 2 + 0] == 3 && data[18 + nfc_cnt * 2 + 1] == 225;nfc_cnt++) {
+      for (nfc_cnt = 0; data[18 + nfc_cnt * 2 + 0] == 3 && data[18 + nfc_cnt * 2 + 1] == 225; nfc_cnt++) {
       }
       var new_num = (nfc_cnt + 1) * 4;
       if (new_num < max_block) {
@@ -188,7 +189,7 @@ MifareClassic.prototype.read = function(device, cb) {
   var callback = cb;
   var card = new Uint8Array;
   self.read_physical(device, 0, null, function(data) {
-    for (var i = 0;i < Math.ceil(data.length / 16);i++) {
+    for (var i = 0; i < Math.ceil(data.length / 16); i++) {
       console.log(UTIL_fmt("[DEBUG] Sector[" + UTIL_BytesToHex([i]) + "] " + UTIL_BytesToHex(data.subarray(i * 16, i * 16 + 16))));
     }
     var GPB = data[57];
@@ -199,13 +200,13 @@ MifareClassic.prototype.read = function(device, cb) {
       var MA = (GPB & 64) >> 6;
       var ADV = (GPB & 3) >> 0;
       var nfc_cnt;
-      for (nfc_cnt = 0;data[18 + nfc_cnt * 2 + 0] == 3 && data[18 + nfc_cnt * 2 + 1] == 225;nfc_cnt++) {
+      for (nfc_cnt = 0; data[18 + nfc_cnt * 2 + 0] == 3 && data[18 + nfc_cnt * 2 + 1] == 225; nfc_cnt++) {
       }
       var tlv = new Uint8Array;
-      for (var i = 1;i <= nfc_cnt;i++) {
+      for (var i = 1; i <= nfc_cnt; i++) {
         tlv = UTIL_concat(tlv, data.subarray(i * 64, i * 64 + 48));
       }
-      for (var i = 0;i < tlv.length;i++) {
+      for (var i = 0; i < tlv.length; i++) {
         switch(tlv[i]) {
           case 0:
             console.log("[DEBUG] NULL TLV.");
@@ -251,7 +252,7 @@ MifareClassic.prototype.compose = function(ndef) {
   var TLV = UTIL_concat(ndef_tlv, UTIL_concat(new Uint8Array(ndef), terminator_tlv));
   var TLV_sector_num = Math.ceil(TLV.length / 48);
   var TLV_blocks = new Uint8Array;
-  for (var i = 0;i < TLV_sector_num;i++) {
+  for (var i = 0; i < TLV_sector_num; i++) {
     TLV_blocks = UTIL_concat(TLV_blocks, TLV.subarray(i * 48, (i + 1) * 48));
     var padding;
     if (i + 1 == TLV_sector_num) {
@@ -263,7 +264,7 @@ MifareClassic.prototype.compose = function(ndef) {
     TLV_blocks = UTIL_concat(TLV_blocks, new Uint8Array([211, 247, 211, 247, 211, 247, 127, 7, 136, 64, 255, 255, 255, 255, 255, 255]));
   }
   var classic_header = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 225, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 161, 162, 163, 164, 165, 120, 119, 136, 193, 255, 255, 255, 255, 255, 255]);
-  for (var i = 0;i < TLV_sector_num;i++) {
+  for (var i = 0; i < TLV_sector_num; i++) {
     classic_header[16 + (i + 1) * 2 + 0] = 3;
     classic_header[16 + (i + 1) * 2 + 1] = 225;
   }
@@ -367,7 +368,7 @@ NDEF.prototype.parse = function(raw, cb) {
   var i;
   var ret = [];
   raw = new Uint8Array(raw);
-  for (i = 0;i < raw.length;i++) {
+  for (i = 0; i < raw.length; i++) {
     var MB = (raw[i] & 128) >> 7;
     var ME = (raw[i] & 64) >> 6;
     var CF = (raw[i] & 32) >> 5;
@@ -442,11 +443,10 @@ NDEF.prototype.parse = function(raw, cb) {
 NDEF.prototype.compose = function() {
   var out = new Uint8Array;
   var arr = [];
-  for (var i = 0;i < this.ndef.length;i++) {
+  for (var i = 0; i < this.ndef.length; i++) {
     var entry = this.ndef[i];
     switch(entry["type"]) {
       case "TEXT":
-      ;
       case "Text":
         arr.push({"TNF":1, "TYPE":new Uint8Array([84]), "PAYLOAD":this.compose_RTD_TEXT(entry["lang"], entry["text"])});
         break;
@@ -464,7 +464,7 @@ NDEF.prototype.compose = function() {
         break;
     }
   }
-  for (var i = 0;i < arr.length;i++) {
+  for (var i = 0; i < arr.length; i++) {
     var flags = 16 | arr[i]["TNF"];
     flags |= i == 0 ? 128 : 0;
     flags |= i == arr.length - 1 ? 64 : 0;
@@ -494,7 +494,6 @@ NDEF.prototype.add = function(d) {
   }
   switch(d["type"]) {
     case "TEXT":
-    ;
     case "Text":
       if (!("encoding" in d)) {
         d["encoding"] = "utf8";
@@ -518,7 +517,6 @@ NDEF.prototype.add = function(d) {
         this.ndef.push(d);
         return true;
       }
-    ;
     case "AAR":
       if ("aar" in d) {
         this.ndef.push(d);
@@ -578,7 +576,7 @@ NDEF.prototype.parse_RTD_URI = function(rtd_uri) {
 NDEF.prototype.compose_RTD_URI = function(uri) {
   var longest = -1;
   var longest_i;
-  for (var i = 0;i < this.prepending.length;i++) {
+  for (var i = 0; i < this.prepending.length; i++) {
     if (uri.substring(0, this.prepending[i].length) == this.prepending[i]) {
       if (this.prepending[i].length > longest) {
         longest_i = i;
@@ -592,7 +590,7 @@ function NFC() {
   var self = this;
   function construct_ndef_obj(ndef_array) {
     var ndef_obj = new NDEF;
-    for (var i = 0;i < ndef_array.length;i++) {
+    for (var i = 0; i < ndef_array.length; i++) {
       ndef_obj.add(ndef_array[i]);
     }
     return ndef_obj;
@@ -626,7 +624,7 @@ function NFC() {
       }, function() {
         console.debug("device.onclose() is called.");
       });
-    }, 1E3);
+    }, 1000);
   }, "read":function(device, options, cb) {
     var timeout = options["timeout"];
     var callback = cb;
@@ -743,11 +741,11 @@ function devManager() {
   this.devs = [];
   this.enumerators = [];
 }
-devManager.prototype.dropDevice = function(dev) {
+devManager.prototype.dropDevice = async function(dev) {
   var tmp = this.devs;
   this.devs = [];
   var present = false;
-  for (var i = 0;i < tmp.length;++i) {
+  for (var i = 0; i < tmp.length; ++i) {
     if (tmp[i] !== dev) {
       this.devs.push(tmp[i]);
     } else {
@@ -758,12 +756,10 @@ devManager.prototype.dropDevice = function(dev) {
     return;
   }
   if (dev.dev) {
-    chrome.usb.releaseInterface(dev.dev, 0, function() {
-      console.log(UTIL_fmt("released"));
-    });
-    chrome.usb.closeDevice(dev.dev, function() {
-      console.log(UTIL_fmt("closed"));
-    });
+    await dev.dev.releaseInterface(0);
+    console.log(UTIL_fmt("released"));
+    await dev.dev.close();
+    console.log(UTIL_fmt("closed"));
     dev.dev = null;
   }
   console.log(this.devs.length + " devices remaining");
@@ -771,7 +767,7 @@ devManager.prototype.dropDevice = function(dev) {
 devManager.prototype.closeAll = function(cb) {
   console.debug("devManager.closeAll() is called");
   var d = this.devs.slice(0);
-  for (var i = 0;i < d.length;++i) {
+  for (var i = 0; i < d.length; ++i) {
     d[i].close();
   }
   if (cb) {
@@ -803,30 +799,33 @@ devManager.prototype.enumerate = function(cb) {
         return;
       }
     }
-    for (var i = 0;i < nDevice;++i) {
+    for (var i = 0; i < nDevice; ++i) {
       (function(dev, i) {
-        window.setTimeout(function() {
-          chrome.usb.claimInterface(dev, 0, function(result) {
-            console.log(UTIL_fmt("claimed"));
-            console.log(dev);
-            self.devs.push(new llSCL3711(dev, acr122));
-            if (i == nDevice - 1) {
-              var u8 = new Uint8Array(4);
-              u8[0] = nDevice >> 24;
-              u8[1] = nDevice >> 16;
-              u8[2] = nDevice >> 8;
-              u8[3] = nDevice;
-              while (self.enumerators.length) {
-                (function(cb) {
-                  window.setTimeout(function() {
-                    if (cb) {
-                      cb(0, u8);
-                    }
-                  }, 20);
-                })(self.enumerators.shift());
-              }
+        window.setTimeout(async function() {
+          await dev.open();
+          console.log("opened");
+          await dev.selectConfiguration(1);
+          console.log("selected configuration #1");
+          await dev.claimInterface(0);
+          console.log(UTIL_fmt("claimed"));
+          console.log(dev);
+          self.devs.push(new llSCL3711(dev, acr122));
+          if (i == nDevice - 1) {
+            var u8 = new Uint8Array(4);
+            u8[0] = nDevice >> 24;
+            u8[1] = nDevice >> 16;
+            u8[2] = nDevice >> 8;
+            u8[3] = nDevice;
+            while (self.enumerators.length) {
+              (function(cb) {
+                window.setTimeout(function() {
+                  if (cb) {
+                    cb(0, u8);
+                  }
+                }, 20);
+              })(self.enumerators.shift());
             }
-          });
+          }
         }, 0);
       })(d[i], i);
     }
@@ -844,18 +843,9 @@ devManager.prototype.enumerate = function(cb) {
     var first = this.enumerators.length == 0;
     this.enumerators.push(cb);
     if (first) {
-      window.setTimeout(function() {
-        chrome.usb.findDevices({"vendorId":1254, "productId":21905}, function(d) {
-          if (d && d.length != 0) {
-            enumerated(d, false);
-          } else {
-            chrome.usb.findDevices({"vendorId":1839, "productId":8704}, function(d) {
-              if (d && d.length != 0) {
-                enumerated(d, true);
-              }
-            });
-          }
-        });
+      window.setTimeout(async function() {
+        const device = await navigator.usb.requestDevice({filters:[{vendorId:1254, productId:21905}, {vendorId:1839, productId:8704}]});
+        enumerated([device], device.vendorId === 1839);
       }, 0);
     }
   }
@@ -874,7 +864,7 @@ devManager.prototype.open = function(which, who, cb) {
 };
 devManager.prototype.close = function(singledev, who) {
   var alldevs = this.devs;
-  for (var i = 0;i < alldevs.length;++i) {
+  for (var i = 0; i < alldevs.length; ++i) {
     var dev = alldevs[i];
     var nremaining = dev.deregisterClient(who);
   }
@@ -1065,7 +1055,7 @@ usbSCL3711.prototype.read = function(timeout, cb) {
     }
     schedule_cb(2184, f.buffer);
   }
-  tid = window.setTimeout(read_timeout, 1E3 * timeout);
+  tid = window.setTimeout(read_timeout, 1000.0 * timeout);
   self.notifyFrame(read_frame);
 };
 usbSCL3711.prototype.write = function(data) {
@@ -1099,7 +1089,7 @@ usbSCL3711.prototype.acr122_set_buzzer = function(enable, cb) {
   var self = this;
   var callback = cb;
   var buzz = enable ? 255 : 0;
-  self.exchange((new Uint8Array([107, 5, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 82, buzz, 0])).buffer, 1, function(rc, data) {
+  self.exchange((new Uint8Array([107, 5, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 82, buzz, 0])).buffer, 1.0, function(rc, data) {
     if (callback) {
       callback(rc, data);
     }
@@ -1117,7 +1107,7 @@ usbSCL3711.prototype.acr122_load_authentication_keys = function(key, loc, cb) {
   }
   var u8 = new Uint8Array([107, 11, 0, 0, 0, 0, 0, 0, 0, 0, 255, 130, 0, loc, 6]);
   u8 = UTIL_concat(u8, key);
-  self.exchange(u8.buffer, 1, function(rc, data) {
+  self.exchange(u8.buffer, 1.0, function(rc, data) {
     console.log("[DEBUG] acr122_load_authentication_keys(loc: " + loc + ", key: " + UTIL_BytesToHex(key) + ") = " + rc);
     if (callback) {
       callback(rc, data);
@@ -1127,7 +1117,7 @@ usbSCL3711.prototype.acr122_load_authentication_keys = function(key, loc, cb) {
 usbSCL3711.prototype.acr122_authentication = function(block, loc, type, cb) {
   var self = this;
   var callback = cb;
-  self.exchange((new Uint8Array([107, 10, 0, 0, 0, 0, 0, 0, 0, 0, 255, 134, 0, 0, 5, 1, 0, block, type, loc])).buffer, 1, function(rc, data) {
+  self.exchange((new Uint8Array([107, 10, 0, 0, 0, 0, 0, 0, 0, 0, 255, 134, 0, 0, 5, 1, 0, block, type, loc])).buffer, 1.0, function(rc, data) {
     console.log("[DEBUG] acr122_authentication(loc: " + loc + ", type: " + type + ", block: " + block + ") = " + rc);
     if (callback) {
       callback(rc, data);
@@ -1230,7 +1220,7 @@ usbSCL3711.prototype.acr122_set_timeout = function(timeout, cb) {
     unit = 255;
   }
   console.log("[DEBUG] acr122_set_timeout(round up to " + unit * 5 + " secs)");
-  self.exchange((new Uint8Array([107, 5, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 65, unit, 0])).buffer, 1, function(rc, data) {
+  self.exchange((new Uint8Array([107, 5, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 65, unit, 0])).buffer, 1.0, function(rc, data) {
     if (callback) {
       callback(rc, data);
     }
@@ -1271,8 +1261,8 @@ usbSCL3711.prototype.open = function(which, cb, onclose) {
 usbSCL3711.prototype.close = function() {
   var self = this;
   function deselect_release(cb) {
-    self.exchange(self.makeFrame(68, new Uint8Array([1])), 1, function(rc, data) {
-      self.exchange(self.makeFrame(82, new Uint8Array([1])), 1, function(rc, data) {
+    self.exchange(self.makeFrame(68, new Uint8Array([1])), 1.0, function(rc, data) {
+      self.exchange(self.makeFrame(82, new Uint8Array([1])), 1.0, function(rc, data) {
       });
     });
   }
@@ -1323,7 +1313,7 @@ usbSCL3711.prototype.makeFrame = function(cmd, data) {
   p8[0] = 212;
   p8[1] = cmd;
   var dcs = p8[0] + p8[1];
-  for (var i = 0;i < r8.length;++i) {
+  for (var i = 0; i < r8.length; ++i) {
     p8[2 + i] = r8[i];
     dcs += r8[i];
   }
@@ -1448,7 +1438,7 @@ usbSCL3711.prototype.write_block = function(blk_no, data, cb, write_inst) {
   var u8 = new Uint8Array(2 + data.length);
   u8[0] = write_inst;
   u8[1] = blk_no;
-  for (var i = 0;i < data.length;i++) {
+  for (var i = 0; i < data.length; i++) {
     u8[2 + i] = data[i];
   }
   this.apdu(u8, function(rc, dummy) {
@@ -1460,13 +1450,13 @@ usbSCL3711.prototype.apdu = function(req, cb, write_only) {
     cb = defaultCallback;
   }
   var u8 = new Uint8Array(this.makeFrame(64, UTIL_concat([1], req)));
-  for (var i = 0;i < u8.length;i += 64) {
+  for (var i = 0; i < u8.length; i += 64) {
     this.dev.writeFrame((new Uint8Array(u8.subarray(i, i + 64))).buffer);
   }
   if (write_only) {
     cb(0, null);
   } else {
-    this.read(3, function(rc, data, expect_sw12) {
+    this.read(3.0, function(rc, data, expect_sw12) {
       if (rc != 0) {
         cb(rc);
         return;
@@ -1492,7 +1482,7 @@ function SHA256() {
   this._k = [1116352408, 1899447441, 3049323471, 3921009573, 961987163, 1508970993, 2453635748, 2870763221, 3624381080, 310598401, 607225278, 1426881987, 1925078388, 2162078206, 2614888103, 3248222580, 3835390401, 4022224774, 264347078, 604807628, 770255983, 1249150122, 1555081692, 1996064986, 2554220882, 2821834349, 2952996808, 3210313671, 3336571891, 3584528711, 113926993, 338241895, 666307205, 773529912, 1294757372, 1396182291, 1695183700, 1986661051, 2177026350, 2456956037, 2730485921, 2820302411, 
   3259730800, 3345764771, 3516065817, 3600352804, 4094571909, 275423344, 430227734, 506948616, 659060556, 883997877, 958139571, 1322822218, 1537002063, 1747873779, 1955562222, 2024104815, 2227730452, 2361852424, 2428436474, 2756734187, 3204031479, 3329325298];
   this._pad[0] = 128;
-  for (var i = 1;i < 64;++i) {
+  for (var i = 1; i < 64; ++i) {
     this._pad[i] = 0;
   }
   this.reset();
@@ -1508,11 +1498,11 @@ SHA256.prototype._compress = function(buf) {
   function _rotr(w, r) {
     return w << 32 - r | w >>> r;
   }
-  for (var i = 0;i < 64;i += 4) {
+  for (var i = 0; i < 64; i += 4) {
     var w = buf[i] << 24 | buf[i + 1] << 16 | buf[i + 2] << 8 | buf[i + 3];
     W[i / 4] = w;
   }
-  for (var i = 16;i < 64;++i) {
+  for (var i = 16; i < 64; ++i) {
     var s0 = _rotr(W[i - 15], 7) ^ _rotr(W[i - 15], 18) ^ W[i - 15] >>> 3;
     var s1 = _rotr(W[i - 2], 17) ^ _rotr(W[i - 2], 19) ^ W[i - 2] >>> 10;
     W[i] = W[i - 16] + s0 + W[i - 7] + s1 & 4294967295;
@@ -1525,7 +1515,7 @@ SHA256.prototype._compress = function(buf) {
   var F = this._chain[5];
   var G = this._chain[6];
   var H = this._chain[7];
-  for (var i = 0;i < 64;++i) {
+  for (var i = 0; i < 64; ++i) {
     var S0 = _rotr(A, 2) ^ _rotr(A, 13) ^ _rotr(A, 22);
     var maj = A & B ^ A & C ^ B & C;
     var t2 = S0 + maj & 4294967295;
@@ -1555,7 +1545,7 @@ SHA256.prototype.update = function(bytes, opt_length) {
     opt_length = bytes.length;
   }
   this._total += opt_length;
-  for (var n = 0;n < opt_length;++n) {
+  for (var n = 0; n < opt_length; ++n) {
     this._buf[this._inbuf++] = bytes[n];
     if (this._inbuf == 64) {
       this._compress(this._buf);
@@ -1565,7 +1555,7 @@ SHA256.prototype.update = function(bytes, opt_length) {
 };
 SHA256.prototype.updateRange = function(bytes, start, end) {
   this._total += end - start;
-  for (var n = start;n < end;++n) {
+  for (var n = start; n < end; ++n) {
     this._buf[this._inbuf++] = bytes[n];
     if (this._inbuf == 64) {
       this._compress(this._buf);
@@ -1574,7 +1564,7 @@ SHA256.prototype.updateRange = function(bytes, start, end) {
   }
 };
 SHA256.prototype.digest = function() {
-  for (var i = 0;i < arguments.length;++i) {
+  for (var i = 0; i < arguments.length; ++i) {
     this.update(arguments[i]);
   }
   var digest = new Array(32);
@@ -1584,14 +1574,14 @@ SHA256.prototype.digest = function() {
   } else {
     this.update(this._pad, 64 - (this._inbuf - 56));
   }
-  for (var i = 63;i >= 56;--i) {
+  for (var i = 63; i >= 56; --i) {
     this._buf[i] = totalBits & 255;
     totalBits >>>= 8;
   }
   this._compress(this._buf);
   var n = 0;
-  for (var i = 0;i < 8;++i) {
-    for (var j = 24;j >= 0;j -= 8) {
+  for (var i = 0; i < 8; ++i) {
+    for (var j = 24; j >= 0; j -= 8) {
       digest[n++] = this._chain[i] >> j & 255;
     }
   }
@@ -1665,7 +1655,7 @@ TT2.prototype.read = function(device, cb) {
       console.log("[DEBUG] poll_n: " + poll_n);
       if (--poll_n < 0) {
         defaultCallback("[DEBUG] got a type 2 tag:", card.buffer);
-        for (var i = 16;i < card.length;) {
+        for (var i = 16; i < card.length;) {
           switch(card[i]) {
             case 0:
               console.debug("NULL TLV");
@@ -1686,7 +1676,7 @@ TT2.prototype.read = function(device, cb) {
               console.info("Lock control: ByteAddr=" + ByteAddr);
               console.info("  Locked bytes:");
               var lock_offset = 64;
-              for (var j = 0;j < (Size + 7) / 8;j++) {
+              for (var j = 0; j < (Size + 7) / 8; j++) {
                 var k = ByteAddr + j;
                 if (k >= card.length) {
                   console.warn("  card[" + k + "] haven't read out yet.");
@@ -1697,11 +1687,11 @@ TT2.prototype.read = function(device, cb) {
                 if (mask & 1) {
                   console.debug("* block-locking");
                 }
-                for (var l = 1;l < 8;l++) {
+                for (var l = 1; l < 8; l++) {
                   if (j * 8 + l >= Size) {
                     continue;
                   }
-                  for (var s = "", m = 0;m < BytesLockedPerLockBit;lock_offset++) {
+                  for (var s = "", m = 0; m < BytesLockedPerLockBit; lock_offset++) {
                     s += "0x" + lock_offset.toString(16) + ", ";
                   }
                   if (mask & 1 << l) {
@@ -1818,7 +1808,7 @@ llSCL3711.prototype.publishFrame = function(f) {
   var old = this.clients;
   var remaining = [];
   var changes = false;
-  for (var i = 0;i < old.length;++i) {
+  for (var i = 0; i < old.length; ++i) {
     var client = old[i];
     if (client.receivedFrame(f)) {
       remaining.push(client);
@@ -1831,30 +1821,30 @@ llSCL3711.prototype.publishFrame = function(f) {
     this.clients = remaining;
   }
 };
-llSCL3711.prototype.readLoop = function() {
+llSCL3711.prototype.readLoop = async function() {
   if (!this.dev) {
     return;
   }
   var self = this;
-  chrome.usb.bulkTransfer(this.dev, {direction:"in", endpoint:this.endpoint, length:2048}, function(x) {
-    if (x.data) {
-      if (x.data.byteLength >= 5) {
-        var u8 = new Uint8Array(x.data);
-        console.log(UTIL_fmt("<" + UTIL_BytesToHex(u8)));
-        self.publishFrame(x.data);
-        window.setTimeout(function() {
-          self.readLoop();
-        }, 0);
-      } else {
-        console.error(UTIL_fmt("tiny reply!"));
-        console.error(x);
-      }
+  const x = await this.dev.transferIn(this.endpoint, 2048);
+  console.log({x});
+  if (x.data) {
+    if (x.data.byteLength >= 5) {
+      var u8 = new Uint8Array(x.data);
+      console.log(UTIL_fmt("<" + UTIL_BytesToHex(u8)));
+      self.publishFrame(x.data.buffer);
+      window.setTimeout(function() {
+        self.readLoop();
+      }, 0);
     } else {
-      console.log("no x.data!");
-      console.log(x);
-      throw "no x.data!";
+      console.error(UTIL_fmt("tiny reply!"));
+      console.error(x);
     }
-  });
+  } else {
+    console.log("no x.data!");
+    console.log(x);
+    throw "no x.data!";
+  }
 };
 llSCL3711.prototype.registerClient = function(who) {
   this.clients.push(who);
@@ -1862,7 +1852,7 @@ llSCL3711.prototype.registerClient = function(who) {
 llSCL3711.prototype.deregisterClient = function(who) {
   var current = this.clients;
   this.clients = [];
-  for (var i = 0;i < current.length;++i) {
+  for (var i = 0; i < current.length; ++i) {
     var client = current[i];
     if (client != who) {
       this.clients.push(client);
@@ -1870,7 +1860,7 @@ llSCL3711.prototype.deregisterClient = function(who) {
   }
   return this.clients.length;
 };
-llSCL3711.prototype.writePump = function() {
+llSCL3711.prototype.writePump = async function() {
   if (!this.dev) {
     return;
   }
@@ -1889,7 +1879,8 @@ llSCL3711.prototype.writePump = function() {
   }
   var u8 = new Uint8Array(frame);
   console.log(UTIL_fmt(">" + UTIL_BytesToHex(u8)));
-  chrome.usb.bulkTransfer(this.dev, {direction:"out", endpoint:this.endpoint, data:frame}, transferComplete);
+  await this.dev.transferOut(this.endpoint, frame);
+  transferComplete();
 };
 llSCL3711.prototype.writeFrame = function(frame) {
   if (!this.dev) {
@@ -1904,14 +1895,14 @@ llSCL3711.prototype.writeFrame = function(frame) {
 };
 function UTIL_StringToBytes(s, bytes) {
   bytes = bytes || new Array(s.length);
-  for (var i = 0;i < s.length;++i) {
+  for (var i = 0; i < s.length; ++i) {
     bytes[i] = s.charCodeAt(i);
   }
   return bytes;
 }
 function UTIL_BytesToString(b) {
   var tmp = new String;
-  for (var i = 0;i < b.length;++i) {
+  for (var i = 0; i < b.length; ++i) {
     tmp += String.fromCharCode(b[i]);
   }
   return tmp;
@@ -1922,7 +1913,7 @@ function UTIL_BytesToHex(b) {
   }
   var hexchars = "0123456789ABCDEF";
   var hexrep = new Array(b.length * 2);
-  for (var i = 0;i < b.length;++i) {
+  for (var i = 0; i < b.length; ++i) {
     hexrep[i * 2 + 0] = hexchars.charAt(b[i] >> 4 & 15);
     hexrep[i * 2 + 1] = hexchars.charAt(b[i] & 15);
   }
@@ -1932,7 +1923,7 @@ function UTIL_BytesToHexWithSeparator(b, sep) {
   var hexchars = "0123456789ABCDEF";
   var stride = 2 + (sep ? 1 : 0);
   var hexrep = new Array(b.length * stride);
-  for (var i = 0;i < b.length;++i) {
+  for (var i = 0; i < b.length; ++i) {
     if (sep) {
       hexrep[i * stride + 0] = sep;
     }
@@ -1944,7 +1935,7 @@ function UTIL_BytesToHexWithSeparator(b, sep) {
 function UTIL_HexToBytes(h) {
   var hexchars = "0123456789ABCDEFabcdef";
   var res = new Uint8Array(h.length / 2);
-  for (var i = 0;i < h.length;i += 2) {
+  for (var i = 0; i < h.length; i += 2) {
     if (hexchars.indexOf(h.substring(i, i + 1)) == -1) {
       break;
     }
@@ -1960,7 +1951,7 @@ function UTIL_equalArrays(a, b) {
     return false;
   }
   var accu = 0;
-  for (var i = 0;i < a.length;++i) {
+  for (var i = 0; i < a.length; ++i) {
     accu |= a[i] ^ b[i];
   }
   return accu === 0;
@@ -1972,7 +1963,7 @@ function UTIL_ltArrays(a, b) {
   if (a.length > b.length) {
     return false;
   }
-  for (var i = 0;i < a.length;++i) {
+  for (var i = 0; i < a.length; ++i) {
     if (a[i] < b[i]) {
       return true;
     }
@@ -1989,7 +1980,7 @@ function UTIL_getRandom(a) {
   var tmp = new Array(a);
   var rnd = new Uint8Array(a);
   window.crypto.getRandomValues(rnd);
-  for (var i = 0;i < a;++i) {
+  for (var i = 0; i < a; ++i) {
     tmp[i] = rnd[i] & 255;
   }
   return tmp;
@@ -2002,7 +1993,7 @@ function UTIL_equalArrays(a, b) {
     return false;
   }
   var accu = 0;
-  for (var i = 0;i < a.length;++i) {
+  for (var i = 0; i < a.length; ++i) {
     accu |= a[i] ^ b[i];
   }
   return accu === 0;
@@ -2014,7 +2005,7 @@ function UTIL_setFavicon(icon) {
   faviconLink.href = icon;
   var head = document.getElementsByTagName("head")[0];
   var links = head.getElementsByTagName("link");
-  for (var i = 0;i < links.length;i++) {
+  for (var i = 0; i < links.length; i++) {
     var link = links[i];
     if (link.type == faviconLink.type && link.rel == faviconLink.rel) {
       head.removeChild(link);
@@ -2024,7 +2015,7 @@ function UTIL_setFavicon(icon) {
 }
 function UTIL_clear(a) {
   if (a instanceof Array) {
-    for (var i = 0;i < a.length;++i) {
+    for (var i = 0; i < a.length; ++i) {
       a[i] = 0;
     }
   }
@@ -2041,10 +2032,10 @@ function UTIL_fmt(s) {
 function UTIL_concat(a, b) {
   var c = new Uint8Array(a.length + b.length);
   var i, n = 0;
-  for (i = 0;i < a.length;i++, n++) {
+  for (i = 0; i < a.length; i++, n++) {
     c[n] = a[i];
   }
-  for (i = 0;i < b.length;i++, n++) {
+  for (i = 0; i < b.length; i++, n++) {
     c[n] = b[i];
   }
   return c;

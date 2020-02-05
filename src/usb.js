@@ -70,41 +70,35 @@ llSCL3711.prototype.publishFrame = function(f) {
   if (changes) this.clients = remaining;
 };
 
-llSCL3711.prototype.readLoop = function() {
+llSCL3711.prototype.readLoop = async function() {
   if (!this.dev) return;
 
   // console.log(UTIL_fmt('entering readLoop ' + this.dev.handle));
 
   var self = this;
-  chrome.usb.bulkTransfer(
-    this.dev,
-    { direction:'in', endpoint:this.endpoint, length:2048 },
-    function(x) {
-      if (x.data) {
-        if (x.data.byteLength >= 5) {
+  const x = await this.dev.transferIn(this.endpoint, 2048 /* length */);
+  if (x.data) {
+    if (x.data.byteLength >= 5) {
+      var u8 = new Uint8Array(x.data);
+      console.log(UTIL_fmt('<' + UTIL_BytesToHex(u8)));
 
-          var u8 = new Uint8Array(x.data);
-          console.log(UTIL_fmt('<' + UTIL_BytesToHex(u8)));
+      self.publishFrame(x.data.buffer);
 
-          self.publishFrame(x.data);
-
-          // Read more.
-          window.setTimeout(function() { self.readLoop(); } , 0);
-        } else {
-          console.error(UTIL_fmt('tiny reply!'));
-          console.error(x);
-          // TODO(yjlou): I don't think a tiny reply requires close.
-          //              Maybe call dev_manager.close(null, clients[0])?
-          // window.setTimeout(function() { self.close(); }, 0);
-        }
-
-      } else {
-        console.log('no x.data!');
-        console.log(x);
-        throw 'no x.data!';
-      }
+      // Read more.
+      window.setTimeout(function() { self.readLoop(); } , 0);
+    } else {
+      console.error(UTIL_fmt('tiny reply!'));
+      console.error(x);
+      // TODO(yjlou): I don't think a tiny reply requires close.
+      //              Maybe call dev_manager.close(null, clients[0])?
+      // window.setTimeout(function() { self.close(); }, 0);
     }
-  );
+
+  } else {
+    console.log('no x.data!');
+    console.log(x);
+    throw 'no x.data!';
+  }
 };
 
 // Register an opener.
@@ -125,7 +119,7 @@ llSCL3711.prototype.deregisterClient = function(who) {
 };
 
 // Stuffs all queued frames from txqueue[] to device.
-llSCL3711.prototype.writePump = function() {
+llSCL3711.prototype.writePump = async function() {
   if (!this.dev) return;  // Ignore.
 
   if (this.txqueue.length == 0) return;  // Done with current queue.
@@ -143,11 +137,8 @@ llSCL3711.prototype.writePump = function() {
   var u8 = new Uint8Array(frame);
   console.log(UTIL_fmt('>' + UTIL_BytesToHex(u8)));
 
-  chrome.usb.bulkTransfer(
-      this.dev,
-      {direction:'out', endpoint:this.endpoint, data:frame},
-      transferComplete
-  );
+  await this.dev.transferOut(this.endpoint, frame);
+  transferComplete();
 };
 
 // Queue frame to be sent.

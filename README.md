@@ -1,20 +1,17 @@
-# Chrome App NFC Library
+# Chrome NFC Desktop Library
 
-With this simple library, you can build a [Chrome App](https://developer.chrome.com/apps) that communicates over USB with NFC Readers.
+With this simple library, websites can communicate over USB with NFC Readers.
 
 ## Supported NFC Readers
 
 [ACR122U](http://www.acs.com.hk/en/products/3/acr122u-usb-nfc-reader) | [SCL3711](http://www.identive-group.com/products-and-solutions/identification-products/mobility-solutions/mobile-readers/scl3711-contactless-usb-smart-card-reader)
 --- | --- 
-<img src="https://raw.github.com/GoogleChrome/chrome-nfc/master/sample/images/acr122u.png"/> | <img src="https://raw.github.com/GoogleChrome/chrome-nfc/master/sample/images/scl3711.png"/>
+<img src="https://raw.github.com/beaufortfrancois/chrome-nfc/master/sample/images/acr122u.png"/> | <img src="https://raw.github.com/beaufortfrancois/chrome-nfc/master/sample/images/scl3711.png"/>
 
-## Play with the Chrome App sample
 
-* Check `Developer Mode` in `chrome://extensions`
-* Click "Load unpacked extension..." in `chrome://extensions` and select the [sample](/sample) folder.
-* Launch it.
+## Play with the sample
 
-<img src="https://raw.github.com/GoogleChrome/chrome-nfc/master/sample/screenshots/1040x811.png"/>
+<img src="https://raw.github.com/beaufortfrancois/chrome-nfc/master/sample/screenshots/1040x811.png"/>
 
 ## Caveats
 
@@ -22,19 +19,7 @@ Learn more about USB Devices Caveats at https://developer.chrome.com/apps/app_us
 
 ## Usage
 
-Once you've imported the [chrome-nfc.js](https:///raw.github.com/GoogleChrome/chrome-nfc/master/sample/chrome-nfc.js) javascript library into your Chrome App, you need to add the permissions below to your manifest file:
-
-```javascript
-"permissions": [
-  "usb",
-  {
-    "usbDevices": [
-      { "vendorId": 1254, "productId": 21905 }, // SCL3711
-      { "vendorId": 1839, "productId": 8704 }   // ACR122U
-    ]
-  }
-]
-```
+Import the [chrome-nfc.js](https:///raw.github.com/beaufortfrancois/chrome-nfc/master/sample/chrome-nfc.js) javascript library.
 
 ### Enumerate NFC readers
 

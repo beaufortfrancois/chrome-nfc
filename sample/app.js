@@ -3,13 +3,13 @@ var compatibleDevices = [
     deviceName: 'ACR122U USB NFC Reader',
     productId: 0x2200,
     vendorId: 0x072f,
-    thumbnailURL: chrome.runtime.getURL('images/acr122u.png')
+    thumbnailURL: 'images/acr122u.png'
   },
   {
     deviceName: 'SCL3711 Contactless USB Smart Card Reader',
     productId: 0x5591,
     vendorId: 0x04e6,
-    thumbnailURL: chrome.runtime.getURL('images/scl3711.png')
+    thumbnailURL: 'images/scl3711.png'
   }
 ]
 
@@ -152,14 +152,14 @@ function showDeviceInfo() {
   $('a[href="#device-info"]').tab('show');
 }
 
-function enumerateDevices() {
+function onDiscoverButtonClicked() {
   chrome.nfc.findDevices(function(devices) {
     device = devices[0];
     showDeviceInfo(); 
   });
 }
 
-enumerateDevices();
+document.querySelector('#home button').addEventListener('click', onDiscoverButtonClicked);
 
 document.querySelector('#read-ndef pre').textContent = readNdefTag.toString();
 document.querySelector('#read-ndef button').addEventListener('click', onReadNdefTagButtonClicked);

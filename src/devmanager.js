@@ -49,7 +49,7 @@ function devManager() {
 }
 
 // Remove a device from devs[] list.
-devManager.prototype.dropDevice = function(dev) {
+devManager.prototype.dropDevice = async function(dev) {
   var tmp = this.devs;
   this.devs = [];
 
@@ -64,10 +64,10 @@ devManager.prototype.dropDevice = function(dev) {
   if (!present) return;  // Done.
 
   if (dev.dev) {
-    chrome.usb.releaseInterface(dev.dev, 0,
-        function() { console.log(UTIL_fmt('released')); });
-    chrome.usb.closeDevice(dev.dev,
-        function() { console.log(UTIL_fmt('closed')); });
+    await dev.dev.releaseInterface(0);
+    console.log(UTIL_fmt('released'));
+    await dev.dev.close();
+    console.log(UTIL_fmt('closed'));
     dev.dev = null;
   }
 
@@ -123,31 +123,34 @@ devManager.prototype.enumerate = function(cb) {
     // Found multiple devices. Create a low level SCL3711 per device.
     for (var i = 0; i < nDevice; ++i) {
       (function(dev, i) {
-        window.setTimeout(function() {
-            chrome.usb.claimInterface(dev, 0, function(result) {
-              console.log(UTIL_fmt('claimed'));
-              console.log(dev);
+        window.setTimeout(async function() {
+          await dev.open();
+          console.log('opened');
+          await dev.selectConfiguration(1);
+          console.log('selected configuration #1');
+          await dev.claimInterface(0);
+          console.log(UTIL_fmt('claimed'));
+          console.log(dev);
 
-              // Push the new low level device to the devs[].
-              self.devs.push(new llSCL3711(dev, acr122));
+          // Push the new low level device to the devs[].
+          self.devs.push(new llSCL3711(dev, acr122));
 
-              // Only callback after the last device is claimed.
-              if (i == (nDevice - 1)) {
-                var u8 = new Uint8Array(4);
-                u8[0] = nDevice >> 24;
-                u8[1] = nDevice >> 16;
-                u8[2] = nDevice >> 8;
-                u8[3] = nDevice;
+          // Only callback after the last device is claimed.
+          if (i == (nDevice - 1)) {
+            var u8 = new Uint8Array(4);
+            u8[0] = nDevice >> 24;
+            u8[1] = nDevice >> 16;
+            u8[2] = nDevice >> 8;
+            u8[3] = nDevice;
 
-                // Notify all enumerators.
-                while (self.enumerators.length) {
-                  (function(cb) {
-                    window.setTimeout(function() { if (cb) cb(0, u8); }, 20);
-                  })(self.enumerators.shift());
-                }
-              }
-            });
-          }, 0);
+            // Notify all enumerators.
+            while (self.enumerators.length) {
+              (function(cb) {
+                window.setTimeout(function() { if (cb) cb(0, u8); }, 20);
+              })(self.enumerators.shift());
+            }
+          }
+        }, 0);
       })(d[i], i);
     }
   };
@@ -171,21 +174,18 @@ devManager.prototype.enumerate = function(cb) {
 
     if (first) {
       // Only first requester calls actual low level.
-      window.setTimeout(function() {
-          chrome.usb.findDevices({'vendorId': 0x04e6, 'productId': 0x5591},
-            function (d) {
-              if (d && d.length != 0) {
-                enumerated(d, false);
-              } else {
-                chrome.usb.findDevices(
-                    {'vendorId': 0x072f, 'productId': 0x2200},
-                    function (d) {
-                      if (d && d.length != 0) {
-                        enumerated(d, true);
-                      }
-                    });
-              }
-          });
+      window.setTimeout(async function() {
+        const device = await navigator.usb.requestDevice({ filters: [
+          { // SCL3711
+            vendorId: 0x04e6,
+            productId: 0x5591
+          },
+          { // ACR122U
+            vendorId: 0x072f,
+            productId: 0x2200
+          }
+        ]});
+        enumerated([device], (device.vendorId === 0x072f));
       }, 0);
     }
   }
